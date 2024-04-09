@@ -1,0 +1,154 @@
+public class Processor {
+
+
+    private Memory memory;
+    private int[] registers = new int[8];
+    private int PC;
+    private int IR;
+
+    public void setMemory(Memory memory) {
+        this.memory = memory;
+    }
+
+    public void setPC(int PC) {
+        this.PC = PC;
+    }
+
+    public void dump() {
+        System.out.println("Registers:");
+        for (int i = 0; i < registers.length; i++) {
+            System.out.printf("reg[%d] = %X%n", i, registers[i]);
+        }
+        System.out.printf("PC = %X%n", PC);
+        System.out.printf("IR = %X%n", IR);
+    }
+
+    public boolean step() {
+        IR = memory.read(PC++);
+        int opcode = (IR & 0b111100000000) >> 8;
+        int arg1 = (IR & 0b000011110000) >> 4;
+        int arg2 = IR & 0b000000001111;
+        switch (opcode) {
+            case 0:
+                halt();
+                return true;
+            case 1:
+                load(arg1, arg2);
+                break;
+            case 2:
+                loadc(arg1);
+                break;
+            case 3:
+                store(arg1, arg2);
+                break;
+            case 4:
+                add(arg1, arg2);
+                break;
+            case 5:
+                mul(arg1, arg2);
+                break;
+            case 6:
+                sub(arg1, arg2);
+                break;
+            case 7:
+                div(arg1, arg2);
+                break;
+            case 8:
+                and(arg1, arg2);
+                break;
+            case 9:
+                or(arg1, arg2);
+                break;
+            case 10:
+                not(arg1, arg2);
+                break;
+            case 11:
+                lshift(arg1, arg2);
+                break;
+            case 12:
+                rshift(arg1, arg2);
+                break;
+            case 13:
+                bwc(arg1, arg2);
+                break;
+            case 14:
+                bwd(arg1, arg2);
+                break;
+            case 15:
+                ifCond(arg1, arg2);
+                break;
+        }
+        return false;
+    }
+
+    private void halt() {
+        // Do nothing
+    }
+
+    private void load(int a, int b) {
+        registers[a] = memory.read(registers[b]);
+    }
+
+    private void loadc(int a) {
+        registers[a] = memory.read(PC++);
+        PC--;
+    }
+
+    private void store(int a, int b) {
+        memory.write(registers[a], registers[b]);
+    }
+
+    private void add(int a, int b) {
+        registers[a] += registers[b];
+    }
+
+    private void mul(int a, int b) {
+        registers[a] *= registers[b];
+    }
+
+    private void sub(int a, int b) {
+        registers[a] -= registers[b];
+    }
+
+    private void div(int a, int b) {
+        if (registers[b] != 0) {
+            registers[a] /= registers[b];
+        } else {
+            System.out.println("Error: division by zero");
+        }
+    }
+
+    private void and(int a, int b) {
+        registers[a] = (registers[a] != 0 && registers[b] != 0) ? 1 : 0;
+    }
+
+    private void or(int a, int b) {
+        registers[a] = (registers[a] != 0 || registers[b] != 0) ? 1 : 0;
+    }
+
+    private void not(int a, int b) {
+        registers[a] = (registers[b] != 0) ? 0 : 1;
+    }
+
+    private void lshift(int a, int b) {
+        registers[a] = registers[b] << 1;
+    }
+
+    private void rshift(int a, int b) {
+        registers[a] = registers[b] >> 1;
+    }
+
+    private void bwc(int a, int b) {
+        registers[a] &= registers[b];
+    }
+
+    private void bwd(int a, int b) {
+        registers[a] |= registers[b];
+    }
+
+    private void ifCond(int a, int b) {
+        if (registers[a] != 0) {
+            PC = registers[b];
+        }
+    }
+}
