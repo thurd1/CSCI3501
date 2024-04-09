@@ -1,0 +1,30 @@
+public class Memory {
+
+    private int[] cells;
+
+    public Memory(int capacity) {
+        cells = new int[capacity];
+    }
+
+    public int read(int address) {
+        if (address < 0 || address >= cells.length) {
+            System.out.println("Error: Invalid memory address");
+            return 0;
+        }
+        return cells[address];
+    }
+
+    public void write(int address, int data) {
+        if (address < 0 || address >= cells.length) {
+            System.out.println("Error: Invalid memory address");
+            return;
+        }
+        cells[address] = data;
+    }
+
+    public void dump() {
+        for (int i = 0; i < cells.length; i++) {
+            System.out.printf("cell[%03X] = %08X%n", i, cells[i]);
+        }
+    }
+}
