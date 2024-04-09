@@ -1,0 +1,96 @@
+import java.util.*;
+import java.io.*;
+
+public class Console {
+
+    private Scanner kbd = new Scanner(System.in);
+    private Memory memory;
+    private Processor cpu;
+
+    public Console(int cap) {
+        memory = new Memory(cap);
+        cpu = new Processor();
+        cpu.setMemory(memory);
+    }
+
+    public Console() {
+        this(256);
+    }
+
+    public void load(String fileName) {
+        try {
+            InputStream inputStream = getClass().getResourceAsStream(fileName);
+            if (inputStream != null) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                String line;
+                int address = 0;
+                while ((line = reader.readLine()) != null) {
+                    memory.write(address++, Integer.parseInt(line, 16));
+                }
+                cpu.setPC(0);
+                System.out.println("Loaded program from file: " + fileName);
+            } else {
+                System.out.println("File not found: " + fileName);
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading input stream: " + e.getMessage());
+        } catch (NumberFormatException e) {
+            System.out.println("Error parsing hex numbers: " + e.getMessage());
+        }
+    }
+
+    public void help() {
+        System.out.println("load fileName \t loads hex memory image into memory");
+        System.out.println("memory \t\t dumps memory to console");
+        System.out.println("registers \t dumps registers to console");
+        System.out.println("step N \t\t executes next N instructions or until halt");
+        System.out.println("help \t\t displays this message");
+        System.out.println("quit \t\t terminate console");
+    }
+
+    public void controlLoop() {
+    System.out.println("type \"help\" for commands");
+    while (true) {
+        System.out.print("-> ");
+        String cmmd = kbd.nextLine();  // Read the entire line
+        Scanner commandScanner = new Scanner(cmmd);
+        String command = commandScanner.next();
+        if (command.equals("quit")) {
+            break;
+        } else if (command.equals("help")) {
+            help();
+        } else if (command.equals("load")) {
+            String fileName = commandScanner.hasNext() ? commandScanner.next() : "";
+            if (!fileName.isEmpty()) {
+                load(fileName);  // Pass the file name to the load method
+            } else {
+                System.out.println("Missing file name");
+            }
+        } else if (command.equals("memory")) {
+            memory.dump();
+        } else if (command.equals("registers")) {
+            cpu.dump();
+        } else if (command.equals("step")) {
+            int numSteps = 1; // Default to one step if no number is provided
+            if (commandScanner.hasNextInt()) {
+                numSteps = commandScanner.nextInt();
+            }
+            for (int i = 0; i < numSteps; i++) {
+                if (cpu.step()) {
+                    System.out.println("Program halted.");
+                    break;
+                }
+            }
+        } else {
+            System.out.println("unrecognized command: " + command);
+        }
+    }
+    System.out.println("bye");
+}
+
+
+    public static void main(String[] args) {
+        Console console = new Console();
+        console.controlLoop();
+    }
+}
